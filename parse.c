@@ -9,21 +9,32 @@ void error(char *fmt, ...) {
 }
 
 void error_at(char *loc, char *fmt, ...) {
-	va_list ap;
-	va_start(ap, fmt);
-	int pos = loc - user_input;
-	fprintf(stderr, "%s\n", user_input);
-	fprintf(stderr, "%*s", pos, " ");
-	fprintf(stderr, "^ ");
-	vfprintf(stderr, fmt, ap);
-	fprintf(stderr, "\n");	
-	exit(1);
+  va_list ap;
+  va_start(ap, fmt);
+  int pos = loc - user_input;
+  fprintf(stderr, "%s\n", user_input);
+  fprintf(stderr, "%*s", pos, " ");
+  fprintf(stderr, "^ ");
+  vfprintf(stderr, fmt, ap);
+  fprintf(stderr, "\n");	
+  exit(1);
 }
 
+LVar *find_lvar(Token *tok) {
+  for(LVar *var = locals; var; var = var->next) {
+    if(var->len == tok->len && !memcmp(tok->str, var->name, var->len)) return var;
+  }
+  return NULL;
+}
 bool consume(char *op) {
   if(token->kind != TK_RESERVED || strlen(op) != token->len || memcmp(token->str, op, token->len)) return false;
   token = token->next;
   return true;
+}
+
+Token *consume_ident() {
+  if(token->kind == TK_IDENT) return token;
+  else return NULL;
 }
 
 void expect(char *op) {
@@ -69,7 +80,7 @@ Token *tokenize(char *p) {
 	  p += 2;
       continue;
 	}
-	if(*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')' || *p == '<' || *p == '>') {
+	if(*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')' || *p == '<' || *p == '>' || *p == ';') {
 	  cur = new_token(TK_RESERVED, cur, p++, 1);
 	  continue;
 	}
@@ -78,6 +89,10 @@ Token *tokenize(char *p) {
       char *q = p;
 	  cur->val = strtol(p, &p, 10);
 	  cur->len = p - q;	 
+	  continue;
+	}
+	if('a' <= *p || 'z' <= *p) {
+      cur = new_token(TK_IDENT, cur, p++, 1);
 	  continue;
 	}
 	error("トークナイズできません");
