@@ -2,6 +2,7 @@ version: "3.8"
 services:
   app:
     build: .
+    container_name: app
     volumes:
       - "./:/home/user/data"
     tty: true
