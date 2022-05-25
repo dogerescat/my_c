@@ -41,4 +41,8 @@ assert 0 '1>2;'
 assert 1 '1>=0;'
 assert 1 '1>=1;'
 assert 0 '1>=2;'
+assert 3 "a = 3;"
+assert 6 "a = 1; b = 2 + 3; a + b;" 
+assert 3 "return 3;"
+assert 13 "a = 3; b = 5 * 6 - 7; return (a + b) / 2;"
 echo OK

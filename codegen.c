@@ -1,6 +1,7 @@
 #include "my_c.h"
 
 Node *code[100];
+LVar *locals;
 
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs) {
   Node *node = calloc(1, sizeof(Node));
@@ -36,8 +37,15 @@ Node *expr() {
 }
 
 Node *stmt() {
-  Node *node = expr();
-  expect(";");
+  Node *node;
+  if(consume_return()) { 
+    node = calloc(1, sizeof(Node));
+	node->kind = ND_RETURN;
+    node->lhs = expr();	
+  } else {
+    node = expr();
+  }
+  if(!consume(";")) error_at(token->str, "';'ではないトークンです");
   return node;
 }
 
@@ -103,7 +111,8 @@ Node *primary() {
 	  lvar->next = locals;
 	  lvar->name = tok->str;
 	  lvar->len = tok->len;
-	  lvar->offset = locals->offset + 8;
+	  if(locals == NULL) lvar->offset = 8;
+	  else lvar->offset = locals->offset + 8;
 	  node->offset = lvar->offset;
 	  locals = lvar;
 	}
@@ -120,6 +129,14 @@ void gen_lval(Node *node) {
 }
 
 void gen(Node *node) {
+  if(node->kind == ND_RETURN) {
+    gen(node->lhs);    
+	printf("  pop rax\n");
+	printf("  mov rsp, rbp\n");
+	printf("  pop rbp\n");
+	printf("  ret\n");
+	return;
+  }
   switch(node->kind) {
   case ND_NUM:
     printf("  push %d\n", node->val);

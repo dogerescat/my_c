@@ -26,6 +26,7 @@ LVar *find_lvar(Token *tok) {
   }
   return NULL;
 }
+
 bool consume(char *op) {
   if(token->kind != TK_RESERVED || strlen(op) != token->len || memcmp(token->str, op, token->len)) return false;
   token = token->next;
@@ -33,8 +34,19 @@ bool consume(char *op) {
 }
 
 Token *consume_ident() {
-  if(token->kind == TK_IDENT) return token;
-  else return NULL;
+  if(token->kind == TK_IDENT) {
+	Token *tok = token;
+	token = token->next;
+	return tok;
+  } else return NULL;
+}
+
+Token *consume_return() {
+  if(token->kind == TK_RETURN) {
+	Token *tok = token;
+	token = token->next;
+	return tok;
+  } else return NULL;
 }
 
 void expect(char *op) {
@@ -43,7 +55,7 @@ void expect(char *op) {
 }
 
 int expect_num() {
-  if(token->kind != TK_NUM) error("数ではありません");
+  if(token->kind != TK_NUM) error("数ではありません \n");
   int val = token->val;
   token = token->next;
   return val;
@@ -66,6 +78,13 @@ bool startSwith(char *p, char *q) {
   return memcmp(p, q, strlen(q)) == 0;
 } 
 
+bool is_alnum(char c) {
+  return ('a' <= c && c <= 'z') ||
+	  ('A' <= c && c <= 'Z') ||
+	  ('1' <= c && c <= '9') ||
+	  (c == '_');
+}
+
 Token *tokenize(char *p) {
   Token head;
   head.next = NULL;
@@ -80,8 +99,17 @@ Token *tokenize(char *p) {
 	  p += 2;
       continue;
 	}
-	if(*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')' || *p == '<' || *p == '>' || *p == ';') {
+	if(startSwith(p, "return") && !is_alnum(p[6])) {
+      cur = new_token(TK_RETURN, cur, p, 6);
+	  p += 6;
+	  continue;
+	}
+	if(*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')' || *p == '<' || *p == '>' || *p == '=' || *p == ';') {
 	  cur = new_token(TK_RESERVED, cur, p++, 1);
+	  continue;
+	}
+    if('a' <= *p && *p <= 'z') {
+      cur = new_token(TK_IDENT, cur, p++, 1);
 	  continue;
 	}
 	if(isdigit(*p)) {
@@ -89,10 +117,6 @@ Token *tokenize(char *p) {
       char *q = p;
 	  cur->val = strtol(p, &p, 10);
 	  cur->len = p - q;	 
-	  continue;
-	}
-	if('a' <= *p || 'z' <= *p) {
-      cur = new_token(TK_IDENT, cur, p++, 1);
 	  continue;
 	}
 	error("トークナイズできません");
