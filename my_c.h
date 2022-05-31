@@ -9,6 +9,8 @@ typedef enum {
   TK_RESERVED,
   TK_NUM,
   TK_IDENT,
+	TK_IF,
+	TK_ELSE,
   TK_RETURN,
   TK_EOF,
 } TokenKind;
@@ -25,7 +27,9 @@ typedef enum {
   ND_LT,
   ND_LE,
   ND_NUM,
-  ND_RETURN
+  ND_RETURN,
+	ND_IF,
+	ND_ELSE,
 } NodeKind;
 
 typedef struct Node Node;
@@ -67,6 +71,8 @@ int expect_num();
 LVar *find_lvar(Token *tok);
 Token *consume_ident();
 Token *consume_return();
+Token *consume_if();
+Token *consume_else();
 bool at_eof();
 Token *new_token(TokenKind kind, Token *cur, char *str, int len);
 bool startSwith(char *p, char *q);

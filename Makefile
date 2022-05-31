@@ -11,6 +11,6 @@ test: my_c
 	./test.sh
 
 clean: 
-	rm -f my_c *.o *~ tmp*
+	rm -f my_c *.o *~ tmp* *.s
 
 .PHONY: test clean

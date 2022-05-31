@@ -49,6 +49,23 @@ Token *consume_return() {
   } else return NULL;
 }
 
+Token *consume_if() {
+	if(token->kind == TK_IF) {
+		Token *tok = token;
+		token = token->next;
+		return tok;
+	} else return NULL;
+}
+
+Token *consume_else() {
+	if(token->kind == TK_ELSE) {
+		Token *tok = token;
+		token = token->next;
+		return tok;
+	}
+	return NULL;
+}
+
 void expect(char *op) {
   if(token->kind != TK_RESERVED || strlen(op) != token->len || memcmp(token->str, op, token->len)) error_at(token->str, "expected \"%s\"", op);
   token = token->next;
@@ -97,7 +114,17 @@ Token *tokenize(char *p) {
 	if(startSwith(p, ">=") || startSwith(p, "<=") || startSwith(p, "==") || startSwith(p, "!=")) {
 	  cur = new_token(TK_RESERVED, cur, p, 2);
 	  p += 2;
-      continue;
+    continue;
+	}
+	if(startSwith(p, "if")) {
+		cur = new_token(TK_IF, cur, p, 2);
+		p += 2;
+		continue;
+	}
+	if(startSwith(p, "else")) {
+		cur = new_token(TK_ELSE, cur, p, 4);	
+		p += 4;
+		continue;
 	}
 	if(startSwith(p, "return") && !is_alnum(p[6])) {
       cur = new_token(TK_RETURN, cur, p, 6);
