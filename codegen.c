@@ -38,21 +38,18 @@ Node *expr() {
 
 Node *stmt() {
   Node *node;
-  if(consume_return()) { 
+  if(consume_kind(TK_RETURN)) { 
     node = calloc(1, sizeof(Node));
 		node->kind = ND_RETURN;
     node->lhs = expr();	
-	} else if(consume_if()) {
+	} else if(consume_kind(TK_IF)) {
 		if(!consume("(")) error_at(token->str, "'('ではないトークンです");
-		//new node
 		node = calloc(1, sizeof(Node));
 		node->kind = ND_IF;
 		node->cond = expr();
 		if(!consume(")"))	error_at(token->str, "')'ではないトークンです");
 		node->then = stmt();
-		if(consume_else()) {
-			node->els = stmt();
-		}
+		if(consume_kind(TK_ELSE)) node->els = stmt();
 		return node;
 	} else {
     node = expr();
@@ -111,7 +108,7 @@ Node *primary() {
 	expect(")");
 	return node;
   }
-  Token *tok = consume_ident();
+  Token *tok = consume_kind(TK_IDENT);
   if(tok) {
     Node *node = calloc(1, sizeof(Node));
 	node->kind = ND_LVAR;

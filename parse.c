@@ -33,37 +33,12 @@ bool consume(char *op) {
   return true;
 }
 
-Token *consume_ident() {
-  if(token->kind == TK_IDENT) {
+Token *consume_kind(TokenKind kind) {
+  if(token->kind == kind) {
 	Token *tok = token;
 	token = token->next;
 	return tok;
   } else return NULL;
-}
-
-Token *consume_return() {
-  if(token->kind == TK_RETURN) {
-	Token *tok = token;
-	token = token->next;
-	return tok;
-  } else return NULL;
-}
-
-Token *consume_if() {
-	if(token->kind == TK_IF) {
-		Token *tok = token;
-		token = token->next;
-		return tok;
-	} else return NULL;
-}
-
-Token *consume_else() {
-	if(token->kind == TK_ELSE) {
-		Token *tok = token;
-		token = token->next;
-		return tok;
-	}
-	return NULL;
 }
 
 void expect(char *op) {
