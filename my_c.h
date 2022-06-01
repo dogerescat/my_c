@@ -9,6 +9,8 @@ typedef enum {
   TK_RESERVED,
   TK_NUM,
   TK_IDENT,
+	TK_IF,
+	TK_ELSE,
   TK_RETURN,
   TK_EOF,
 } TokenKind;
@@ -25,7 +27,8 @@ typedef enum {
   ND_LT,
   ND_LE,
   ND_NUM,
-  ND_RETURN
+  ND_RETURN,
+	ND_IF,
 } NodeKind;
 
 typedef struct Node Node;
@@ -33,6 +36,9 @@ struct Node {
   NodeKind kind;
   Node *lhs;
   Node *rhs;
+	Node *cond;
+	Node *then;
+	Node *els;
   int val;
   int offset;
 };
@@ -62,11 +68,10 @@ extern LVar *locals;
 void error(char *fmt, ...);
 void error_at(char *loc, char *fmt, ...);
 bool consume(char *op);
+Token *consume_kind(TokenKind kind);
 void expect(char *op);
 int expect_num();
 LVar *find_lvar(Token *tok);
-Token *consume_ident();
-Token *consume_return();
 bool at_eof();
 Token *new_token(TokenKind kind, Token *cur, char *str, int len);
 bool startSwith(char *p, char *q);

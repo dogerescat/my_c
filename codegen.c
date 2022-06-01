@@ -38,11 +38,20 @@ Node *expr() {
 
 Node *stmt() {
   Node *node;
-  if(consume_return()) { 
+  if(consume_kind(TK_RETURN)) { 
     node = calloc(1, sizeof(Node));
-	node->kind = ND_RETURN;
+		node->kind = ND_RETURN;
     node->lhs = expr();	
-  } else {
+	} else if(consume_kind(TK_IF)) {
+		if(!consume("(")) error_at(token->str, "'('ではないトークンです");
+		node = calloc(1, sizeof(Node));
+		node->kind = ND_IF;
+		node->cond = expr();
+		if(!consume(")"))	error_at(token->str, "')'ではないトークンです");
+		node->then = stmt();
+		if(consume_kind(TK_ELSE)) node->els = stmt();
+		return node;
+	} else {
     node = expr();
   }
   if(!consume(";")) error_at(token->str, "';'ではないトークンです");
@@ -99,7 +108,7 @@ Node *primary() {
 	expect(")");
 	return node;
   }
-  Token *tok = consume_ident();
+  Token *tok = consume_kind(TK_IDENT);
   if(tok) {
     Node *node = calloc(1, sizeof(Node));
 	node->kind = ND_LVAR;
@@ -131,31 +140,44 @@ void gen_lval(Node *node) {
 void gen(Node *node) {
   if(node->kind == ND_RETURN) {
     gen(node->lhs);    
-	printf("  pop rax\n");
-	printf("  mov rsp, rbp\n");
-	printf("  pop rbp\n");
-	printf("  ret\n");
-	return;
+		printf("  pop rax\n");
+		printf("  mov rsp, rbp\n");
+		printf("  pop rbp\n");
+		printf("  ret\n");
+		return;
   }
   switch(node->kind) {
   case ND_NUM:
-    printf("  push %d\n", node->val);
-	return;
+  	printf("  push %d\n", node->val);
+		return;
   case ND_LVAR:
-	gen_lval(node);
-    printf("  pop rax\n");
-	printf("  mov rax, [rax]\n");
-	printf("  push rax\n");
-	return;
+		gen_lval(node);
+  	printf("  pop rax\n");
+		printf("  mov rax, [rax]\n");
+		printf("  push rax\n");
+		return;
   case ND_ASSIGN:
-	gen_lval(node->lhs);
-	gen(node->rhs);
-	printf("  pop rdi\n");
-	printf("  pop rax\n");
-	printf("  mov [rax], rdi\n");
-	printf("  push rdi\n");
-	return;
-  default: break;
+		gen_lval(node->lhs);
+		gen(node->rhs);
+		printf("  pop rdi\n");
+		printf("  pop rax\n");
+		printf("  mov [rax], rdi\n");
+		printf("  push rdi\n");
+		return;
+	case ND_IF:
+		gen(node->cond);
+		printf("  pop rax\n");
+		printf("  cmp rax, 0\n");
+		printf("  je .LelseXXX\n");
+		gen(node->then);
+		printf("  jmp .LendXXX\n");
+		printf(".LelseXXX:\n");
+		if(node->els) {
+			gen(node->els);
+		}
+		printf(".LendXXX:\n");
+		return;
+	default: break;
   }
 
   gen(node->lhs);
@@ -166,37 +188,37 @@ void gen(Node *node) {
   switch(node->kind) {
   case ND_ADD:
     printf("  add rax, rdi\n");
-	break;
+		break;
   case ND_SUB:
-	printf("  sub rax, rdi\n");
-	break;
+		printf("  sub rax, rdi\n");
+		break;
   case ND_MUL:
-	printf("  imul rax, rdi\n");
-	break;
+		printf("  imul rax, rdi\n");
+		break;
   case ND_DIV:
-	printf("  cqo\n");
-	printf("  idiv rdi\n");
-	break;
+		printf("  cqo\n");
+		printf("  idiv rdi\n");
+		break;
   case ND_EQ:
-	printf("  cmp rax, rdi\n");
-	printf("  sete al\n");
-	printf("  movzb rax, al\n");
-	break;
+		printf("  cmp rax, rdi\n");
+		printf("  sete al\n");
+		printf("  movzb rax, al\n");
+		break;
   case ND_NE:
-	printf("  cmp rax, rdi\n");
-	printf("  setne al\n");
-	printf("  movzb rax, al\n");
-	break;
+		printf("  cmp rax, rdi\n");
+		printf("  setne al\n");
+		printf("  movzb rax, al\n");
+		break;
   case ND_LT:
-	printf("  cmp rax, rdi\n");
-	printf("  setl al\n");
-	printf("  movzb rax, al\n");
-	break;
+		printf("  cmp rax, rdi\n");
+		printf("  setl al\n");
+		printf("  movzb rax, al\n");
+		break;
   case ND_LE:
-	printf("  cmp rax, rdi\n");
-	printf("  setle al\n");
-	printf("  movzb rax, al\n");
-	break;
+		printf("  cmp rax, rdi\n");
+		printf("  setle al\n");
+		printf("  movzb rax, al\n");
+		break;
   default: break;
   }
   printf("  push rax\n");
