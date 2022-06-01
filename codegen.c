@@ -47,9 +47,12 @@ Node *stmt() {
 		//new node
 		node = calloc(1, sizeof(Node));
 		node->kind = ND_IF;
-		node->lhs = expr();
+		node->cond = expr();
 		if(!consume(")"))	error_at(token->str, "')'ではないトークンです");
-		node->rhs = stmt();
+		node->then = stmt();
+		if(consume_else()) {
+			node->els = stmt();
+		}
 		return node;
 	} else {
     node = expr();
@@ -165,11 +168,16 @@ void gen(Node *node) {
 		printf("  push rdi\n");
 		return;
 	case ND_IF:
-		gen(node->lhs);
+		gen(node->cond);
 		printf("  pop rax\n");
 		printf("  cmp rax, 0\n");
-		printf("  je .LendXXX\n");
-		gen(node->rhs);
+		printf("  je .LelseXXX\n");
+		gen(node->then);
+		printf("  jmp .LendXXX\n");
+		printf(".LelseXXX:\n");
+		if(node->els) {
+			gen(node->els);
+		}
 		printf(".LendXXX:\n");
 		return;
 	default: break;

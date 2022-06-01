@@ -49,4 +49,6 @@ assert 13 "a = 3; b = 5 * 6 - 7; return (a + b) / 2;"
 assert 3 "a = 3; if(a == 3) return a; return 5;"
 assert 5 "a = 5; if(a != 3) return a; return 3;"
 assert 4 "a = 3; b = 1; if(a+b == 4) return a+b; return 0;"
+assert 2 "a = 3; b = 1; if(a == b) return a + b; else return a - b;"
+assert 4 "a = 3; b = 1; if(a != b) return a + b; else return a - b;"
 echo OK
