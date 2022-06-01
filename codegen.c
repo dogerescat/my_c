@@ -51,6 +51,32 @@ Node *stmt() {
 		node->then = stmt();
 		if(consume_kind(TK_ELSE)) node->els = stmt();
 		return node;
+	} else if(consume_kind(TK_WHILE)) {
+		if(!consume("(")) error_at(token->str, "'('ではないトークンです");	
+		node = calloc(1, sizeof(Node));
+		node->kind = ND_WHILE;
+		node->cond = expr();
+		if(!consume(")"))	error_at(token->str, "')'ではないトークンです");
+		node->then = stmt();
+		return node;
+	} else if(consume_kind(TK_FOR)) {
+		if(!consume("(")) error_at(token->str, "'('ではないトークンです");	
+		node = calloc(1, sizeof(Node));
+		node->kind = ND_FOR;
+		if(!consume(";")) {
+			node->init = expr();
+			if(!consume(";")) error_at(token->str, "';'ではないトークンです");
+		}
+		if(!consume(";")) {
+			node->cond = expr();
+			if(!consume(";"))  error_at(token->str, "';'ではないトークンです");
+		}
+		if(!consume(")")) {
+			node->inc = expr();
+			if(!consume(")"))	error_at(token->str, "')'ではないトークンです");
+		} 
+		node->then = stmt();
+		return node;
 	} else {
     node = expr();
   }
@@ -105,17 +131,17 @@ Node *unary() {
 Node *primary() {
   if(consume("(")) {
     Node *node = expr();	  
-	expect(")");
-	return node;
+		expect(")");
+		return node;
   }
   Token *tok = consume_kind(TK_IDENT);
   if(tok) {
     Node *node = calloc(1, sizeof(Node));
-	node->kind = ND_LVAR;
-	LVar *lvar = find_lvar(tok);
-	if(lvar) {
+		node->kind = ND_LVAR;
+		LVar *lvar = find_lvar(tok);
+		if(lvar) {
       node->offset = lvar->offset;
-	} else {
+		} else {
       lvar = calloc(1, sizeof(LVar));
 	  lvar->next = locals;
 	  lvar->name = tok->str;
@@ -124,8 +150,8 @@ Node *primary() {
 	  else lvar->offset = locals->offset + 8;
 	  node->offset = lvar->offset;
 	  locals = lvar;
-	}
-	return node;
+		}
+		return node;
   }
   return new_node_num(expect_num());
 }
@@ -175,6 +201,28 @@ void gen(Node *node) {
 		if(node->els) {
 			gen(node->els);
 		}
+		printf(".LendXXX:\n");
+		return;
+	case ND_WHILE:
+		printf(".LbeginXXX:\n");
+		gen(node->cond);
+		printf("  pop rax\n");
+		printf("  cmp rax, 0\n");
+		printf("  je .LendXXX\n");
+		gen(node->then);
+		printf("  jmp .LbeginXXX\n");	
+		printf(".LendXXX:\n");
+		return;
+	case ND_FOR:
+		if(node->init) gen(node->init);
+		printf(".LbeginXXX:\n");
+		if(node->cond) gen(node->cond);
+		printf("  pop rax\n");
+		printf("  cmp rax, 0\n");
+		printf("  je .LendXXX\n");
+		gen(node->then);
+		if(node->inc) gen(node->inc);
+		printf("  jmp .LbeginXXX\n");
 		printf(".LendXXX:\n");
 		return;
 	default: break;

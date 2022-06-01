@@ -51,4 +51,10 @@ assert 5 "a = 5; if(a != 3) return a; return 3;"
 assert 4 "a = 3; b = 1; if(a+b == 4) return a+b; return 0;"
 assert 2 "a = 3; b = 1; if(a == b) return a + b; else return a - b;"
 assert 4 "a = 3; b = 1; if(a != b) return a + b; else return a - b;"
+
+assert 5 "a = 0; while(a < 5) a = a + 1; return a;"
+assert 0 "a = 0; while(a) a = a + 1; return a;"
+
+assert 5 "b = 0; for(a = 0; a < 5; a = a + 1) b = b + 1; return b;"
+assert 5 "b = 5; for(; ;) return b;"
 echo OK
