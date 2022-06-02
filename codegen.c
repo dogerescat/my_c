@@ -2,6 +2,7 @@
 
 Node *code[100];
 LVar *locals;
+int nlabel = 1;
 
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs) {
   Node *node = calloc(1, sizeof(Node));
@@ -47,6 +48,7 @@ Node *stmt() {
 		node = calloc(1, sizeof(Node));
 		node->kind = ND_IF;
 		node->cond = expr();
+		node->label = nlabel++;
 		if(!consume(")"))	error_at(token->str, "')'ではないトークンです");
 		node->then = stmt();
 		if(consume_kind(TK_ELSE)) node->els = stmt();
@@ -56,6 +58,7 @@ Node *stmt() {
 		node = calloc(1, sizeof(Node));
 		node->kind = ND_WHILE;
 		node->cond = expr();
+		node->label = nlabel++;
 		if(!consume(")"))	error_at(token->str, "')'ではないトークンです");
 		node->then = stmt();
 		return node;
@@ -63,6 +66,7 @@ Node *stmt() {
 		if(!consume("(")) error_at(token->str, "'('ではないトークンです");	
 		node = calloc(1, sizeof(Node));
 		node->kind = ND_FOR;
+		node->label = nlabel++;
 		if(!consume(";")) {
 			node->init = expr();
 			if(!consume(";")) error_at(token->str, "';'ではないトークンです");
@@ -194,36 +198,36 @@ void gen(Node *node) {
 		gen(node->cond);
 		printf("  pop rax\n");
 		printf("  cmp rax, 0\n");
-		printf("  je .LelseXXX\n");
+		printf("  je .Lelse%d\n", node->label);
 		gen(node->then);
-		printf("  jmp .LendXXX\n");
-		printf(".LelseXXX:\n");
+		printf("  jmp .Lend%d\n", node->label);
+		printf(".Lelse%d:\n", node->label);
 		if(node->els) {
 			gen(node->els);
 		}
-		printf(".LendXXX:\n");
+		printf(".Lend%d:\n", node->label);
 		return;
 	case ND_WHILE:
-		printf(".LbeginXXX:\n");
+		printf(".Lbegin%d:\n", node->label);
 		gen(node->cond);
 		printf("  pop rax\n");
 		printf("  cmp rax, 0\n");
-		printf("  je .LendXXX\n");
+		printf("  je .Lend%d\n", node->label);
 		gen(node->then);
-		printf("  jmp .LbeginXXX\n");	
-		printf(".LendXXX:\n");
+		printf("  jmp .Lbegin%d\n", node->label);	
+		printf(".Lend%d:\n", node->label);
 		return;
 	case ND_FOR:
 		if(node->init) gen(node->init);
-		printf(".LbeginXXX:\n");
+		printf(".Lbegin%d:\n", node->label);
 		if(node->cond) gen(node->cond);
 		printf("  pop rax\n");
 		printf("  cmp rax, 0\n");
-		printf("  je .LendXXX\n");
+		printf("  je .Lend%d\n", node->label);
 		gen(node->then);
 		if(node->inc) gen(node->inc);
-		printf("  jmp .LbeginXXX\n");
-		printf(".LendXXX:\n");
+		printf("  jmp .Lbegin%d\n", node->label);
+		printf(".Lend%d:\n", node->label);
 		return;
 	default: break;
   }

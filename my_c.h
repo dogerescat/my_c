@@ -47,6 +47,7 @@ struct Node {
 	Node *inc;
   int val;
   int offset;
+	int label;
 };
 
 typedef struct Token Token;
@@ -70,6 +71,7 @@ extern char *user_input;
 extern Token *token;
 extern Node *code[100];
 extern LVar *locals;
+extern int nlabel;
 
 void error(char *fmt, ...);
 void error_at(char *loc, char *fmt, ...);

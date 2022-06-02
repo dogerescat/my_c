@@ -57,4 +57,6 @@ assert 0 "a = 0; while(a) a = a + 1; return a;"
 
 assert 5 "b = 0; for(a = 0; a < 5; a = a + 1) b = b + 1; return b;"
 assert 5 "b = 5; for(; ;) return b;"
+
+assert 5 "b = 0; for(; b < 3;) b = b + 1; while(b < 5) b = b + 1; return b;"
 echo OK
