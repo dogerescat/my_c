@@ -47,7 +47,7 @@ void expect(char *op) {
 }
 
 int expect_num() {
-  if(token->kind != TK_NUM) error("数ではありません \n");
+  if(token->kind != TK_NUM) error("数ではありません\n");
   int val = token->val;
   token = token->next;
   return val;
@@ -91,20 +91,30 @@ Token *tokenize(char *p) {
 	  p += 2;
     continue;
 	}
-	if(startSwith(p, "if")) {
+	if(startSwith(p, "if") && !is_alnum(p[2])) {
 		cur = new_token(TK_IF, cur, p, 2);
 		p += 2;
 		continue;
 	}
-	if(startSwith(p, "else")) {
+	if(startSwith(p, "else") && !is_alnum(p[4])) {
 		cur = new_token(TK_ELSE, cur, p, 4);	
 		p += 4;
 		continue;
 	}
 	if(startSwith(p, "return") && !is_alnum(p[6])) {
-      cur = new_token(TK_RETURN, cur, p, 6);
+    cur = new_token(TK_RETURN, cur, p, 6);
 	  p += 6;
 	  continue;
+	}
+	if(startSwith(p, "while") && !is_alnum(p[5])) {
+		cur = new_token(TK_WHILE, cur, p, 5);
+		p += 5;
+		continue;
+	}
+	if(startSwith(p, "for") && !is_alnum(p[3])) {
+		cur = new_token(TK_FOR, cur, p, 3);
+		p += 3;
+		continue;
 	}
 	if(*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')' || *p == '<' || *p == '>' || *p == '=' || *p == ';') {
 	  cur = new_token(TK_RESERVED, cur, p++, 1);
