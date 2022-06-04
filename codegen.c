@@ -19,6 +19,21 @@ Node *new_node_num(int val) {
   return node;
 }
 
+Vector *new_vec() {
+	Vector *v = calloc(1, sizeof(Vector));
+	v->data = malloc(sizeof(void *) * 16);
+	v->capa = 16;
+	v->len = 0;
+	return v;
+}
+
+void vec_push(Vector *v, void *elem) {
+	if(v->capa == v->len) {
+		v->capa *= 2;
+		v->data = realloc(v->data, sizeof(void *) * v->capa);
+	}
+	v->data[v->len++] = elem;
+}
 void program() {
   int i = 0;  
   while(!at_eof()) {
@@ -80,6 +95,14 @@ Node *stmt() {
 			if(!consume(")"))	error_at(token->str, "')'ではないトークンです");
 		} 
 		node->then = stmt();
+		return node;
+	} else if(consume("{")) {
+		node = calloc(1, sizeof(Node));
+		node->kind = ND_BLOCK;
+		node->stmts = new_vec();
+		while(!consume("}")) {
+			vec_push(node->stmts, stmt());	
+		}
 		return node;
 	} else {
     node = expr();
@@ -147,13 +170,13 @@ Node *primary() {
       node->offset = lvar->offset;
 		} else {
       lvar = calloc(1, sizeof(LVar));
-	  lvar->next = locals;
-	  lvar->name = tok->str;
-	  lvar->len = tok->len;
-	  if(locals == NULL) lvar->offset = 8;
-	  else lvar->offset = locals->offset + 8;
-	  node->offset = lvar->offset;
-	  locals = lvar;
+	  	lvar->next = locals;
+	  	lvar->name = tok->str;
+	  	lvar->len = tok->len;
+	  	if(locals == NULL) lvar->offset = 8;
+	  	else lvar->offset = locals->offset + 8;
+	  	node->offset = lvar->offset;
+	  	locals = lvar;
 		}
 		return node;
   }
@@ -228,6 +251,12 @@ void gen(Node *node) {
 		if(node->inc) gen(node->inc);
 		printf("  jmp .Lbegin%d\n", node->label);
 		printf(".Lend%d:\n", node->label);
+		return;
+	case ND_BLOCK:
+		for(int i = 0; i < node->stmts->len; i++) {
+			gen(node->stmts->data[i]);
+			printf("  pop rax\n");
+		}
 		return;
 	default: break;
   }
