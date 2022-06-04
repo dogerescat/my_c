@@ -163,7 +163,7 @@ Node *primary() {
   }
   Token *tok = consume_kind(TK_IDENT);
   if(tok) {
-    Node *node = calloc(1, sizeof(Node));
+		Node *node = calloc(1, sizeof(Node));
 		node->kind = ND_LVAR;
 		LVar *lvar = find_lvar(tok);
 		if(lvar) {

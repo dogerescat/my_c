@@ -121,7 +121,11 @@ Token *tokenize(char *p) {
 	  	continue;
 		}
   	if('a' <= *p && *p <= 'z') {
-    	cur = new_token(TK_IDENT, cur, p++, 1);
+			char *c = p;
+			while('a' <= *c && *c <= 'z') c++;
+			int len = c - p;
+    	cur = new_token(TK_IDENT, cur, p, len);
+			p = c;
 	  	continue;
 		}
 		if(isdigit(*p)) {
