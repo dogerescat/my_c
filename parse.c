@@ -116,7 +116,7 @@ Token *tokenize(char *p) {
 			p += 3;
 			continue;
 		}
-		if(*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')' || *p == '<' || *p == '>' || *p == '=' || *p == '{' || *p == '}' || *p == ';') {
+		if(*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')' || *p == '<' || *p == '>' || *p == '=' || *p == '{' || *p == '}' || *p == ',' || *p == ';') {
 	  	cur = new_token(TK_RESERVED, cur, p++, 1);
 	  	continue;
 		}
@@ -125,6 +125,7 @@ Token *tokenize(char *p) {
 			while('a' <= *c && *c <= 'z') c++;
 			int len = c - p;
     	cur = new_token(TK_IDENT, cur, p, len);
+			cur->name = p;
 			p = c;
 	  	continue;
 		}

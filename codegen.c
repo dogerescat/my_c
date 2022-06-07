@@ -3,6 +3,7 @@
 Node *code[100];
 LVar *locals;
 int nlabel = 1;
+static char *argreg[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
 
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs) {
   Node *node = calloc(1, sizeof(Node));
@@ -34,6 +35,7 @@ void vec_push(Vector *v, void *elem) {
 	}
 	v->data[v->len++] = elem;
 }
+
 void program() {
   int i = 0;  
   while(!at_eof()) {
@@ -163,6 +165,9 @@ Node *primary() {
   }
   Token *tok = consume_kind(TK_IDENT);
   if(tok) {
+		if(consume("(")) {
+			return function_call(tok);
+		}
 		Node *node = calloc(1, sizeof(Node));
 		node->kind = ND_LVAR;
 		LVar *lvar = find_lvar(tok);
@@ -183,6 +188,20 @@ Node *primary() {
   return new_node_num(expect_num());
 }
 
+Node *function_call(Token *token) {
+	Node *node = calloc(1, sizeof(Node));
+	node->kind = ND_CALL;
+	node->name = token->name;
+	node->len = token->len;
+	node->label = nlabel++;
+	node->args = new_vec();
+	while(!consume(")")) {
+		if(node->args->len > 0) expect(",");
+		vec_push(node->args, assign());
+	}
+	return node;
+}
+
 void gen_lval(Node *node) {
   if(node->kind != ND_LVAR) error("代入の左辺値が変数ではありません"); 
   printf("  mov rax, rbp\n");
@@ -191,8 +210,9 @@ void gen_lval(Node *node) {
 }
 
 void gen(Node *node) {
+	char *name;
   if(node->kind == ND_RETURN) {
-    gen(node->lhs);    
+    gen(node->lhs);
 		printf("  pop rax\n");
 		printf("  mov rsp, rbp\n");
 		printf("  pop rbp\n");
@@ -257,6 +277,27 @@ void gen(Node *node) {
 			gen(node->stmts->data[i]);
 			printf("  pop rax\n");
 		}
+		return;
+	case ND_CALL:
+		for(int i = 0; i < node->args->len; i++) {
+			gen(node->args->data[i]);
+		}
+		for(int i = node->args->len-1; i >= 0; i--) {
+			printf("  pop %s\n", argreg[i]);
+		}
+		memcpy(name, node->name, node->len);
+		printf("  mov rax, rsp\n");
+		printf("  and rax, 15\n");
+		printf("  jnz .Lcall%d\n", node->label);
+		printf("  mov rax, 0\n");
+		printf("  call %s\n", name);
+		printf("  jmp .Lend%d\n", node->label);
+		printf(".Lcall%d:\n", node->label);
+		printf("  sub rsp, 8\n");
+		printf("  mov rax, 0\n");
+		printf("  call %s\n", name);
+		printf("  add rsp, 8\n");
+		printf(".Lend%d:\n", node->label);
 		return;
 	default: break;
   }

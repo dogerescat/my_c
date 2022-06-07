@@ -4,7 +4,10 @@ assert() {
   input="$2"
 
   ./my_c "$input" > tmp.s
-  cc -o tmp tmp.s
+	cd test
+	cc -c func.c
+	cd ..
+  cc -o tmp tmp.s test/func.o
   ./tmp
   actual="$?"
 
@@ -64,4 +67,7 @@ assert 5 "a = 0; while(a < 5) { a = a + 1; } return 5;"
 assert 5 "b = 0; for(; b < 5;) { b = b + 1; } return b;"
 assert 9 "foo = 0; bar = 0; while(foo < 3) { foo = foo + 1; bar = bar + 2; } return foo+bar;"
 
+assert 168 "foo();"
+assert 168 "bar(1, 2);"
+assert 168 "bar(3, 8);"
 echo OK

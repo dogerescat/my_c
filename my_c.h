@@ -34,6 +34,7 @@ typedef enum {
 	ND_WHILE,
 	ND_FOR,
 	ND_BLOCK,
+	ND_CALL,
 } NodeKind;
 
 typedef struct {
@@ -53,15 +54,19 @@ struct Node {
 	Node *init;
 	Node *inc;
 	Vector *stmts;
+	char *name;
+	int len;
   int val;
   int offset;
 	int label;
+	Vector *args;
 };
 
 typedef struct Token Token;
 struct Token {
   TokenKind kind;
   Token *next;
+	char *name;
   int val;
   char *str;
   int len;
@@ -94,6 +99,7 @@ bool startSwith(char *p, char *q);
 Token *tokenize(char *p);
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs);
 Node *new_node_num(int val);
+Node *function_call(Token *token);
 Vector *new_vec();
 void vec_push(Vector *v, void *elem);
 void program();
